@@ -39,9 +39,6 @@ exports.generateIntegers = function(callback,options,errorCallback){
 	if(!callback){
 	   callback = console.log;
 	}
-	if(!errorCallback){
-	   errorCallback = globalErrorCallback;
-	}
 	var scheme;
 	var opts = getOptions(options,defaults);
 	if(opts.secure){
@@ -52,11 +49,15 @@ exports.generateIntegers = function(callback,options,errorCallback){
 	var callbackFunction = function(res){
 		res.on("data",function(data){
 			if(res.statusCode == 200){
-				callback(formatNumbers(data));
+				callback(null, formatNumbers(data));
 			}else if(res.statusCode == 503){
-				errorCallback("ServerError",503,data);
+                                var err = new Error("ServerError");
+                                err.code = 503;
+				callback(err,data);
 			}else{
-				errorCallback("RequestError",res.statusCode,data);
+                                var err = new Error("RequestError");
+                                err.code = res.statusCode;
+				callback(err,data);
 			}
 		});
 	}
